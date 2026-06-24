@@ -1,0 +1,12 @@
+:root {
+}
+
+.bolsa-boton {
+    transition-property: scale;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out;
+}
+
+.bolsa-boton:hover {
+    scale: 1.1 1.1;
+}
