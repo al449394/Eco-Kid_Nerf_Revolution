@@ -1,54 +1,82 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
+using System.Collections;
 
 public class VidaJugador : MonoBehaviour
 {
-    // 4 es 100%, 0 es muerto
-    public int faseActual = 4;
-    public Image imagenRelleno;
+    [Header("Estadisticas")]
+    public float vidaActual = 100f;
+    public float vidaMaxima = 100f;
+    public bool estaMuerto = false;
 
-    // Aquí arrastras tus 4 dibujos
-    public Sprite fase_100_completa; // La de 3 colores
-    public Sprite fase_70_amarillo_rojo;
-    public Sprite fase_40_todo_rojo;
-    public Sprite fase_10_poco_rojo;
+    [Header("Interfaz (Canvas)")]
+    public UnityEngine.UI.Image barraVida;
+
+    [Header("Efectos")]
+    public SpriteRenderer spriteRenderer;
+    public float tiempoInmunidad = 1.0f;
+    public float velocidadParpadeo = 0.1f; // Tiempo entre parpadeos
+    private bool esInvulnerable = false;
+
+    [Header("Muerte (UI Toolkit)")]
+    public UIDocument deathScreenUI;
 
     void Start()
     {
-        ActualizarUI();
+        vidaActual = vidaMaxima;
+        if (deathScreenUI != null) deathScreenUI.rootVisualElement.style.display = DisplayStyle.None;
     }
 
-    public void RecibirDanio(int cantidad)
+    public void RecibirDaño(float cantidad)
     {
-        faseActual -= cantidad;
-        faseActual = Mathf.Clamp(faseActual, 0, 4);
+        if (estaMuerto || esInvulnerable) return;
 
-        ActualizarUI();
+        vidaActual -= cantidad;
+        if (barraVida != null) barraVida.fillAmount = vidaActual / vidaMaxima;
 
-        if (faseActual <= 0) Morir();
+        if (vidaActual <= 0) Morir();
+        else StartCoroutine(EfectoParpadeo()); // Llamamos a la nueva corrutina
     }
 
-    void ActualizarUI()
+    // CORRUTINA DEFINITIVA DE PARPADEO
+    IEnumerator EfectoParpadeo()
     {
-        // Si no hay vida, desactivamos la imagen para que se vea el fondo verde oscuro
-        if (faseActual <= 0)
+        esInvulnerable = true;
+        float tiempoPasado = 0;
+
+        // Guardamos el color original por si acaso tienes un tinte puesto
+        Color colorOriginal = spriteRenderer.color;
+        Color colorTransparente = new Color(colorOriginal.r, colorOriginal.g, colorOriginal.b, 0.2f);
+
+        while (tiempoPasado < tiempoInmunidad)
         {
-            imagenRelleno.enabled = false;
-            return;
+            // Cambiamos el color a casi invisible
+            if (spriteRenderer != null) spriteRenderer.color = colorTransparente;
+            yield return new WaitForSeconds(velocidadParpadeo);
+
+            // Cambiamos el color a normal
+            if (spriteRenderer != null) spriteRenderer.color = colorOriginal;
+            yield return new WaitForSeconds(velocidadParpadeo);
+
+            tiempoPasado += (velocidadParpadeo * 2);
         }
 
-        imagenRelleno.enabled = true;
-
-        // Cambiamos el dibujo según la fase
-        if (faseActual == 4) imagenRelleno.sprite = fase_100_completa;
-        else if (faseActual == 3) imagenRelleno.sprite = fase_70_amarillo_rojo;
-        else if (faseActual == 2) imagenRelleno.sprite = fase_40_todo_rojo;
-        else if (faseActual == 1) imagenRelleno.sprite = fase_10_poco_rojo;
+        // Al terminar, nos aseguramos de que el color vuelve a ser el original
+        if (spriteRenderer != null) spriteRenderer.color = colorOriginal;
+        esInvulnerable = false;
     }
 
     void Morir()
     {
-        Debug.Log("Has muerto. Solo queda el fondo verde oscuro.");
-        // Aquí lógica de reinicio
+        if (estaMuerto) return;
+        estaMuerto = true;
+
+        Time.timeScale = 0f; // Congela todo el juego
+
+        if (deathScreenUI != null)
+        {
+            deathScreenUI.rootVisualElement.style.display = DisplayStyle.Flex;
+        }
     }
 }

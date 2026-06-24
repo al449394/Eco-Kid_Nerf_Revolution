@@ -197,8 +197,8 @@ MonoBehaviour:
   anim: {fileID: 2872033446940255609}
   puntoLanzamiento: {fileID: 8707369495006787624}
   prefabBotella: {fileID: 6509919333192289495, guid: b097c440e34963842886c70daf9d73f4, type: 3}
-  velocidadPatrulla: 2
-  distanciaPatrulla: 10
+  velocidadPatrulla: 5
+  distanciaPatrulla: 20
   rangoDeteccion: 30
   cadenciaAtaque: 2
 --- !u!114 &143683368863242659

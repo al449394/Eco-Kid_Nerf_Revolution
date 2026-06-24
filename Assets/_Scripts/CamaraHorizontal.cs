@@ -9,6 +9,8 @@ public class CamaraHorizontal : MonoBehaviour
 
     private Vector3 velocidad = Vector3.zero;
 
+    //late update por que debe ser lo ultimo que se haga despues de que el jugador se mueva
+    //si no se iria calculando constantemente y crearia un temblor
     void LateUpdate()
     {
         if (objetivo == null) return;

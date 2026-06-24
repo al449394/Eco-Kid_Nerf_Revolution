@@ -8,10 +8,11 @@ public class ApuntadoRaton : MonoBehaviour
         Vector3 posicionRaton = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
         // 2. Calcular la dirección: (Destino - Origen)
-        // El origen es la posición de este objeto (el punto de giro)
+        // El origen es la posición de este objeto
+        //Al usar .normalized, hacemos que la fuerza del vector sea 1. No nos importa la distancia, solo hacia dónde apunta.
         Vector2 direccion = (posicionRaton - transform.position).normalized;
 
-        // 3. Calcular el ángulo usando el arco tangente (Atan2)
+        // Mathf.Atan2: Es una función de arco tangente. Le das la vertical (y) y la horizontal (x) y ella te dice qué ángulo forma.
         // Esto nos da el ángulo en radianes, así que lo pasamos a grados (* Rad2Deg)
         float angulo = Mathf.Atan2(direccion.y, direccion.x) * Mathf.Rad2Deg;
 

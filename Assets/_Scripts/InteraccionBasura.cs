@@ -1,4 +1,7 @@
 using UnityEngine;
+using System.Collections.Generic;
+using System;
+using UnityEngine.InputSystem;
 
 public class InteraccionBasura : MonoBehaviour
 {
@@ -8,12 +11,15 @@ public class InteraccionBasura : MonoBehaviour
     public Sprite[] epicos;
     public Sprite[] legendarios;
 
-    [Header("Ajustes de Tienda")]
-    public int costeMejora = 6;
+    [Header("Ajustes de Cofre")]
+    public int costeMejora = 2;
 
     private MejorasJugador mejoras;
     private ManejadorChapas fichasControlador;
     private bool jugadorCerca = false;
+
+    private Dictionary<string, Func<bool>> comprobadorMejoras;
+    private Dictionary<string, Action> activadorMejoras;
 
     void Start()
     {
@@ -22,12 +28,42 @@ public class InteraccionBasura : MonoBehaviour
         {
             mejoras = player.GetComponent<MejorasJugador>();
             fichasControlador = player.GetComponent<ManejadorChapas>();
+            InicializarDiccionarios();
         }
+    }
+
+    void InicializarDiccionarios()
+    {
+        comprobadorMejoras = new Dictionary<string, Func<bool>>
+        {
+            { "dmg", () => mejoras.mejoraDanio },
+            { "firerate", () => mejoras.mejoraCadencia },
+            { "range", () => mejoras.mejoraAlcance },
+            { "speed", () => mejoras.mejoraVelocidad },
+            { "bounce", () => mejoras.tieneRebote },
+            { "t shoot", () => mejoras.tieneDisparoEnT },
+            { "triple", () => mejoras.tieneDisparoTriple },
+            { "homing", () => mejoras.tieneTeledirigido },
+            { "machinegun", () => mejoras.tieneMetralleta }
+        };
+
+        activadorMejoras = new Dictionary<string, Action>
+        {
+            { "dmg", () => mejoras.mejoraDanio = true },
+            { "firerate", () => mejoras.mejoraCadencia = true },
+            { "range", () => mejoras.mejoraAlcance = true },
+            { "speed", () => mejoras.mejoraVelocidad = true },
+            { "bounce", () => mejoras.tieneRebote = true },
+            { "t shoot", () => mejoras.tieneDisparoEnT = true },
+            { "triple", () => mejoras.tieneDisparoTriple = true },
+            { "homing", () => mejoras.tieneTeledirigido = true },
+            { "machinegun", () => mejoras.tieneMetralleta = true }
+        };
     }
 
     void Update()
     {
-        if (jugadorCerca && Input.GetKeyDown(KeyCode.E))
+        if (jugadorCerca && Keyboard.current.eKey.wasPressedThisFrame)
         {
             IntentarCompra();
         }
@@ -37,16 +73,19 @@ public class InteraccionBasura : MonoBehaviour
     {
         if (mejoras == null || fichasControlador == null) return;
 
-        // Primero miramos si el jugador ya lo tiene TODO al máximo
         if (TieneTodoAlMaximo())
         {
-            Debug.Log("¡Ya eres un dios! No quedan más mejoras en la basura.");
+            Debug.Log("<color=orange>¡Ya tienes todo! No malgastes chapas.</color>");
             return;
         }
 
         if (fichasControlador.chapasActuales >= costeMejora)
         {
-            CanjearAleatorio(); // El cobro lo hacemos dentro si encontramos algo nuevo
+            CanjearAleatorio();
+        }
+        else
+        {
+            Debug.Log("Necesitas " + costeMejora + " fichas.");
         }
     }
 
@@ -57,76 +96,70 @@ public class InteraccionBasura : MonoBehaviour
         bool encontradaNueva = false;
         int intentos = 0;
 
-        // Intentamos buscar una mejora que NO tengas (máximo 30 intentos para evitar bloqueos)
-        while (!encontradaNueva && intentos < 30)
+        while (!encontradaNueva && intentos < 50)
         {
-            float suerte = Random.Range(0f, 100f);
+            float suerte = UnityEngine.Random.Range(0f, 100f);
 
-            if (suerte <= 60f) spriteElegido = comunes[Random.Range(0, comunes.Length)];
-            else if (suerte <= 90f) spriteElegido = epicos[Random.Range(0, epicos.Length)];
-            else spriteElegido = legendarios[Random.Range(0, legendarios.Length)];
+            if (suerte <= 50f)
+                spriteElegido = comunes[UnityEngine.Random.Range(0, comunes.Length)];
+            else if (suerte <= 85f)
+                spriteElegido = epicos[UnityEngine.Random.Range(0, epicos.Length)];
+            else
+                spriteElegido = legendarios[UnityEngine.Random.Range(0, legendarios.Length)];
 
-            nombreProcesado = spriteElegido.name.ToLower().Trim();
-
-            // Comprobamos si ya tienes esta mejora específica
-            if (!YaTieneEstaMejora(nombreProcesado))
+            if (spriteElegido != null)
             {
-                encontradaNueva = true;
+                nombreProcesado = spriteElegido.name.ToLower().Trim();
+                if (!YaTieneEstaMejora(nombreProcesado)) encontradaNueva = true;
             }
             intentos++;
         }
 
         if (encontradaNueva)
         {
-            // Solo cobramos y activamos si es una mejora que no tenías
             fichasControlador.chapasActuales -= costeMejora;
             fichasControlador.ActualizarUI();
 
-            ActivarMejoraDefinitiva(nombreProcesado);
+            EjecutarMejora(nombreProcesado);
             LanzarIcono(spriteElegido);
+
+            Debug.Log("<color=red>¡Cofre agotado!</color>");
+            Destroy(gameObject, 0.1f);
         }
         else
         {
-            // Si después de 30 intentos no sale nada nuevo, es que las que quedan son muy raras
-            // o tienes casi todo. ¡Mala suerte en esta tirada!
-            Debug.Log("Esta vez solo había chatarra... (Salió algo repetido)");
+            Debug.Log("Este cofre solo tenía cosas que ya tienes. ¡Busca otro!");
         }
     }
 
-    // Función que mira si el booleano ya está en true
     bool YaTieneEstaMejora(string nombre)
     {
-        if (nombre.Contains("dmg")) return mejoras.mejoraDanio;
-        if (nombre.Contains("firerate")) return mejoras.mejoraCadencia;
-        if (nombre.Contains("range")) return mejoras.mejoraAlcance;
-        if (nombre.Contains("speed")) return mejoras.mejoraVelocidad;
-        if (nombre.Contains("bounce")) return mejoras.tieneRebote;
-        if (nombre.Contains("t shoot")) return mejoras.tieneDisparoEnT;
-        if (nombre.Contains("triple")) return mejoras.tieneDisparoTriple;
-        if (nombre.Contains("homing")) return mejoras.tieneTeledirigido;
-        if (nombre.Contains("machinegun")) return mejoras.tieneMetralleta;
+        foreach (var item in comprobadorMejoras)
+        {
+            if (nombre.Contains(item.Key)) return item.Value.Invoke();
+        }
         return false;
     }
 
-    void ActivarMejoraDefinitiva(string nombre)
+    void EjecutarMejora(string nombre)
     {
-        if (nombre.Contains("dmg")) mejoras.mejoraDanio = true;
-        else if (nombre.Contains("firerate")) mejoras.mejoraCadencia = true;
-        else if (nombre.Contains("range")) mejoras.mejoraAlcance = true;
-        else if (nombre.Contains("speed")) mejoras.mejoraVelocidad = true;
-        else if (nombre.Contains("bounce")) mejoras.tieneRebote = true;
-        else if (nombre.Contains("t shoot")) mejoras.tieneDisparoEnT = true;
-        else if (nombre.Contains("triple")) mejoras.tieneDisparoTriple = true;
-        else if (nombre.Contains("homing")) mejoras.tieneTeledirigido = true;
-        else if (nombre.Contains("machinegun")) mejoras.tieneMetralleta = true;
+        foreach (var item in activadorMejoras)
+        {
+            if (nombre.Contains(item.Key))
+            {
+                item.Value.Invoke();
+                return;
+            }
+        }
     }
 
-    // Seguridad para no entrar en un bucle infinito si ya compró las 9
     bool TieneTodoAlMaximo()
     {
-        return mejoras.mejoraDanio && mejoras.mejoraCadencia && mejoras.mejoraAlcance &&
-               mejoras.mejoraVelocidad && mejoras.tieneRebote && mejoras.tieneDisparoEnT &&
-               mejoras.tieneDisparoTriple && mejoras.tieneTeledirigido && mejoras.tieneMetralleta;
+        foreach (var item in comprobadorMejoras)
+        {
+            if (!item.Value.Invoke()) return false;
+        }
+        return true;
     }
 
     void LanzarIcono(Sprite s)
@@ -135,7 +168,6 @@ public class InteraccionBasura : MonoBehaviour
         {
             GameObject icono = Instantiate(plantillaIcono, transform.position + Vector3.up * 1.5f, Quaternion.identity);
             icono.GetComponent<SpriteRenderer>().sprite = s;
-            icono.GetComponent<SpriteRenderer>().sortingOrder = 50;
             if (!icono.GetComponent<ItemFlotante>()) icono.AddComponent<ItemFlotante>();
         }
     }

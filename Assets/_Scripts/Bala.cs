@@ -19,10 +19,11 @@ public class Bala : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        //para que la bala sepa quien la ha lanzado y poder conectarlo con los codigos de las mejoras
         GameObject player = GameObject.FindWithTag("Player");
         if (player != null) mejoras = player.GetComponent<MejorasJugador>();
 
-        // 1. TAMAÑO ACUMULATIVO
+        // tamaño acumulativo
         float escalaFinal = 0.3f;
         if (mejoras != null)
         {
@@ -75,14 +76,16 @@ public class Bala : MonoBehaviour
         }
     }
 
+    //al chocar
     private void OnTriggerEnter2D(Collider2D collision)
-    {
-        // ELIMINADO BalaEnemigo para evitar el error de Tag
+    { 
+        //con otra bala o el jugador
         if (collision.CompareTag("Bala") || collision.CompareTag("Player"))
         {
             return;
         }
 
+        //con un enemigo
         if (collision.CompareTag("Enemigo"))
         {
             float danioFinal = danioBase;
@@ -91,10 +94,12 @@ public class Bala : MonoBehaviour
                 if (mejoras.tieneMetralleta) danioFinal = 1.5f;
                 if (mejoras.mejoraDanio) danioFinal += 4f;
             }
-            collision.GetComponent<VidaEnemigo>()?.TomarDanio(danioFinal);
+            collision.GetComponent<VidaEnemigo>()?.TomarDaño(danioFinal);
             DividirEnT(collision);
             Destroy(gameObject);
         }
+
+        //con el suelo
         else if (collision.CompareTag("Suelo"))
         {
             if (mejoras != null && mejoras.tieneRebote)
@@ -109,6 +114,8 @@ public class Bala : MonoBehaviour
                 DividirEnT(collision);
                 Destroy(gameObject);
             }
+
+        //con la botella, el proyectil enemigo
         }
         else if (collision.CompareTag("Botella"))
         {

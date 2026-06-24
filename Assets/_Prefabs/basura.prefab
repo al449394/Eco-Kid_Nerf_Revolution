@@ -119,7 +119,7 @@ MonoBehaviour:
   legendarios:
   - {fileID: 9136574636451808338, guid: cbc1608a47f619242a166fe23e845a98, type: 3}
   - {fileID: 564439294832975815, guid: 62a087d27bd5c3f4e98e067e9cdcbd82, type: 3}
-  costeMejora: 1
+  costeMejora: 2
 --- !u!61 &6312486608686860776
 BoxCollider2D:
   m_ObjectHideFlags: 0

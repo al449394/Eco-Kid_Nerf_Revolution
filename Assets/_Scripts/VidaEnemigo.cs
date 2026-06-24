@@ -7,29 +7,28 @@ public class VidaEnemigo : MonoBehaviour
     public float vidaMaxima = 8f;
 
     [Header("Referencias")]
-    public Animator anim; // Arrastra aquí el Animator del enemigo
-    public GameObject chapaPrefab; // Aquí irá tu dibujo de la chapa (Prefab)
+    public Animator anim;
+    public GameObject chapaPrefab;
 
     private bool haMuerto = false;
 
     void Start()
     {
         vidaActual = vidaMaxima;
-        // Si no arrastras el animator, el código intenta buscarlo solo
         if (anim == null) anim = GetComponent<Animator>();
     }
 
-    public void TomarDanio(float cantidad)
+    public void TomarDaño(float cantidad)
     {
-        if (haMuerto) return; // Si ya está muerto, no hace nada más
+        if (haMuerto) return;
 
         vidaActual -= cantidad;
         Debug.Log("Enemigo recibe daño. Vida restante: " + vidaActual);
 
-        // LANZAR ANIMACIÓN DE GOLPE
+        //animacion
         if (anim != null)
         {
-            // "RecibirGolpe" debe ser el nombre exacto del Trigger en tu Animator
+
             anim.SetTrigger("RecibirGolpe");
         }
 
@@ -43,7 +42,7 @@ public class VidaEnemigo : MonoBehaviour
     {
         haMuerto = true;
 
-        // Crea una chapa justo donde estaba el enemigo
+        // dropea una chapa
         if (chapaPrefab != null)
         {
             Instantiate(chapaPrefab, transform.position, Quaternion.identity);

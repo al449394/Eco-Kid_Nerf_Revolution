@@ -28,21 +28,24 @@ public class Botella : MonoBehaviour
     {
         if (collision.CompareTag("Player"))
         {
-            // Intentamos aplicar daño
+            // Aplicamos daño
             VidaJugador scriptVida = collision.GetComponent<VidaJugador>();
             if (scriptVida != null)
             {
-                scriptVida.RecibirDanio(danioFases);
+                scriptVida.RecibirDaño(danioFases);
             }
 
             // Destrucción inmediata para evitar que atraviese al jugador
             Destroy(gameObject);
         }
+        //si choca con la bala
         else if (collision.CompareTag("Bala"))
         {
             Destroy(collision.gameObject);
             Destroy(gameObject);
+
         }
+        //si choca con otra cosa
         else if (collision.gameObject.name.Contains("Muro") ||
                  collision.gameObject.name.Contains("Suelo") ||
                  collision.gameObject.name.Contains("Limites"))

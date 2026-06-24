@@ -1,78 +1,66 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class ControladorJugador : MonoBehaviour
 {
-    [Header("Ajustes de Movimiento")]
-    public float velocidadBase = 25f; // Ajustada a 25 ya que 12 era muy lento
-
-    [Header("Referencias Visuales")]
-    public SpriteRenderer spritePersonaje; // Arrastra aquí el objeto "Cuerpo_Visible"
+    public float velocidadBase = 25f;
+    public float multiplicadorVelocidad = 1.5f;
+    public SpriteRenderer spritePersonaje;
+    public ControladorPistola scriptPistola;
 
     private Rigidbody2D rb;
     private Animator anim;
+    private VidaJugador vida;
     private MejorasJugador mejoras;
     private Vector2 mov;
 
     void Start()
     {
-        // Referencias básicas
         rb = GetComponent<Rigidbody2D>();
+        anim = GetComponentInChildren<Animator>();
+        vida = GetComponent<VidaJugador>();
         mejoras = GetComponent<MejorasJugador>();
 
-        // CAMBIO CLAVE: Buscamos el Animator en los hijos (Cuerpo_Visible)
-        anim = GetComponentInChildren<Animator>();
-
-        // Configuración física para evitar caídas o rotaciones raras
-        rb.gravityScale = 0;
         rb.freezeRotation = true;
-
-        // Verificación en consola
-        if (anim == null)
-        {
-            Debug.LogError("No se encontró Animator en el Player ni en sus hijos. Revisa la jerarquía.");
-        }
     }
+
+    void OnMove(InputValue value) { if (!vida.estaMuerto) mov = value.Get<Vector2>(); }
+    void OnFire(InputValue value) { if (scriptPistola != null && !vida.estaMuerto) scriptPistola.estaDisparando = value.isPressed; }
 
     void Update()
     {
-        // 1. CAPTURAR ENTRADA (Teclado)
-        mov.x = Input.GetAxisRaw("Horizontal");
-        mov.y = Input.GetAxisRaw("Vertical");
-
-        // 2. ENVIAR DATOS AL ANIMATOR
-        if (anim != null)
+        if (vida != null && vida.estaMuerto)
         {
-            // Enviamos Horizontal y Vertical para el Blend Tree
-            anim.SetFloat("Horizontal", mov.x);
-            anim.SetFloat("Vertical", mov.y);
-
-            // Enviamos Speed: 1 si se mueve, 0 si está quieto
-            // Esto asegura que la transición se active siempre
-            float valorSpeed = (mov.magnitude > 0.01f) ? 1f : 0f;
-            anim.SetFloat("Speed", valorSpeed);
+            rb.linearVelocity = Vector2.zero;
+            if (anim != null) anim.enabled = false;
+            return;
         }
 
-        // 3. GIRAR EL SPRITE (FLIP)
+        if (anim != null)
+        {
+            anim.SetFloat("Horizontal", mov.x);
+            anim.SetFloat("Vertical", mov.y);
+            anim.SetFloat("Speed", mov.magnitude);
+        }
+
         if (spritePersonaje != null)
         {
-            if (mov.x > 0) spritePersonaje.flipX = false; // Mira a la derecha
-            else if (mov.x < 0) spritePersonaje.flipX = true; // Mira a la izquierda
+            if (mov.x > 0.1f) spritePersonaje.flipX = false;
+            else if (mov.x < -0.1f) spritePersonaje.flipX = true;
         }
     }
 
     void FixedUpdate()
     {
-        // 4. MOVIMIENTO FÍSICO
-        float vFinal = velocidadBase;
+        if (vida != null && vida.estaMuerto) return;
 
-        // Aplicamos mejora de velocidad si existe
+        float velocidadCalculada = velocidadBase;
+
         if (mejoras != null && mejoras.mejoraVelocidad)
         {
-            vFinal *= 1.6f;
+            velocidadCalculada = velocidadBase * multiplicadorVelocidad;
         }
 
-        // Aplicamos la velocidad al Rigidbody2D
-        // .normalized evita que corra más rápido al ir en diagonal
-        rb.linearVelocity = mov.normalized * vFinal;
+        rb.linearVelocity = mov.normalized * velocidadCalculada;
     }
 }
