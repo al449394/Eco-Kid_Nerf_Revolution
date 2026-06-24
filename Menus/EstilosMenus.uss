@@ -1,0 +1,16 @@
+:root {
+}
+
+.boton-bolsa:hover {
+    -unity-background-image-tint-color: rgb(255, 250, 0);
+}
+
+.bolsa-animada:hover {
+    scale: 1.1 1.1;
+    transition-property: transform-origin, ignored;
+    transition-duration: 0.2s, 0s;
+    transition-timing-function: ease-out-back, ease;
+}
+
+.bolsa-animada {
+}
