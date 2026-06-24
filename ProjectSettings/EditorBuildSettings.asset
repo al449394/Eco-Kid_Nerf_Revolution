@@ -8,6 +8,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/Scenes/EscenaMenu.unity
+    guid: a29a2015e250e964e88474473dae13f9
+  - enabled: 1
+    path: Assets/Scenes/EscenaVictoria.unity
+    guid: a54c714cb8efd6147b12e367520590f9
   m_configObjects:
-    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: c8e397f9f49ed7c4685fd1b9db4736dc, type: 3}
   m_UseUCBPForAssetBundles: 0

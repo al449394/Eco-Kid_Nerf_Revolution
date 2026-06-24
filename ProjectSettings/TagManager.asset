@@ -8,6 +8,7 @@ TagManager:
   - Enemigo
   - Suelo
   - Botella
+  - Meta
   layers:
   - Default
   - TransparentFX
